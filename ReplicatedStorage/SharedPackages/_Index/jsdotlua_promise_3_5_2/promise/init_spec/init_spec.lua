@@ -1,0 +1,1693 @@
+--// ReplicatedStorage.SharedPackages._Index.jsdotlua_promise@3.5.2.promise.init.spec (ModuleScript)
+
+return function()
+    local v_u_1 = require(script.Parent)
+    v_u_1.TEST = true
+    local v_u_2 = Instance.new("BindableEvent")
+    v_u_1._timeEvent = v_u_2.Event
+    local v_u_3 = 0
+    function v_u_1._getTime()
+        return v_u_3
+    end
+    local function v_u_6(p4)
+        local v5 = p4 or 0.016666666666666666
+        v_u_3 = v_u_3 + v5
+        v_u_2:Fire(v5)
+        task.defer(coroutine.running())
+        coroutine.yield()
+    end
+    local function v_u_7(...)
+        return select("#", ...), { ... }
+    end
+    describe("Promise.Status", function()
+        it("should error if indexing nil value", function()
+            expect(function()
+                local _ = v_u_1.Status.wrong
+            end).to.throw()
+        end)
+    end)
+    describe("Unhandled rejection signal", function()
+        it("should call unhandled rejection callbacks", function()
+            local v_u_9 = v_u_1.new(function(_, p8)
+                p8(1, 2)
+            end)
+            local v_u_10 = 0
+            local function v14(p11, p12, p13)
+                v_u_10 = v_u_10 + 1
+                expect(p11).to.equal(v_u_9)
+                expect(p12).to.equal(1)
+                expect(p13).to.equal(2)
+            end
+            local v15 = v_u_1.onUnhandledRejection(v14)
+            v_u_6()
+            expect(v_u_10).to.equal(1)
+            v15()
+            v_u_1.new(function(_, p16)
+                p16(3, 4)
+            end)
+            v_u_6()
+            expect(v_u_10).to.equal(1)
+        end)
+    end)
+    describe("Promise.new", function()
+        it("should instantiate with a callback", function()
+            local v17 = v_u_1.new(function() end)
+            expect(v17).to.be.ok()
+        end)
+        it("should invoke the given callback with resolve and reject", function()
+            local v_u_18 = 0
+            local v_u_19 = nil
+            local v_u_20 = nil
+            local v23 = v_u_1.new(function(p21, p22)
+                v_u_18 = v_u_18 + 1
+                v_u_19 = p21
+                v_u_20 = p22
+            end)
+            expect(v23).to.be.ok()
+            expect(v_u_18).to.equal(1)
+            expect(v_u_19).to.be.a("function")
+            expect(v_u_20).to.be.a("function")
+            expect(v23:getStatus()).to.equal(v_u_1.Status.Started)
+        end)
+        it("should resolve promises on resolve()", function()
+            local v_u_24 = 0
+            local v26 = v_u_1.new(function(p25)
+                v_u_24 = v_u_24 + 1
+                p25()
+            end)
+            expect(v26).to.be.ok()
+            expect(v_u_24).to.equal(1)
+            expect(v26:getStatus()).to.equal(v_u_1.Status.Resolved)
+        end)
+        it("should reject promises on reject()", function()
+            local v_u_27 = 0
+            local v29 = v_u_1.new(function(_, p28)
+                v_u_27 = v_u_27 + 1
+                p28()
+            end)
+            expect(v29).to.be.ok()
+            expect(v_u_27).to.equal(1)
+            expect(v29:getStatus()).to.equal(v_u_1.Status.Rejected)
+        end)
+        it("should reject on error in callback", function()
+            local v_u_30 = 0
+            local v31 = v_u_1.new(function()
+                v_u_30 = v_u_30 + 1
+                error("hahah")
+            end)
+            expect(v31).to.be.ok()
+            expect(v_u_30).to.equal(1)
+            expect(v31:getStatus()).to.equal(v_u_1.Status.Rejected)
+            local v32 = expect
+            local v33 = v31._values[1]
+            v32(tostring(v33):find("hahah")).to.be.ok()
+            local v34 = expect
+            local v35 = v31._values[1]
+            v34(tostring(v35):find("init.spec")).to.be.ok()
+            local v36 = expect
+            local v37 = v31._values[1]
+            v36(tostring(v37):find("runExecutor")).to.be.ok()
+        end)
+        it("should work with C functions", function()
+            expect(function()
+                v_u_1.new(tick):andThen(tick)
+            end).to.never.throw()
+        end)
+        it("should have a nice tostring", function()
+            local v38 = expect
+            local v39 = v_u_1.resolve
+            v38(tostring(v39()):gmatch("Promise(Resolved)")).to.be.ok()
+        end)
+        it("should allow yielding", function()
+            local v_u_40 = Instance.new("BindableEvent")
+            local v42 = v_u_1.new(function(p41)
+                v_u_40.Event:Wait()
+                p41(5)
+            end)
+            expect(v42:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_40:Fire()
+            task.defer(coroutine.running())
+            coroutine.yield()
+            expect(v42:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v42._values[1]).to.equal(5)
+        end)
+        it("should preserve stack traces of resolve-chained promises", function()
+            local v44 = v_u_1.new(function(p43)
+                p43(v_u_1.new(function()
+                    error("sample text")
+                end))
+            end)
+            expect(v44:getStatus()).to.equal(v_u_1.Status.Rejected)
+            local v45 = v44._values[1]
+            local v46 = tostring(v45)
+            expect(v46:find("sample text")).to.be.ok()
+            expect(v46:find("nestedCall")).to.be.ok()
+            expect(v46:find("runExecutor")).to.be.ok()
+            expect(v46:find("runPlanNode")).to.be.ok()
+            expect(v46:find("...Rejected because it was chained to the following Promise, which encountered an error:")).to.be.ok()
+        end)
+        it("should report errors from Promises with _error (< v2)", function()
+            local v47 = v_u_1.reject()
+            v47._error = "Sample error"
+            local v48 = v_u_1.resolve():andThenReturn(v47)
+            expect(v48:getStatus()).to.equal(v_u_1.Status.Rejected)
+            local v49 = v48._values[1]
+            local v50 = tostring(v49)
+            expect(v50:find("Sample error")).to.be.ok()
+            expect(v50:find("...Rejected because it was chained to the following Promise, which encountered an error:")).to.be.ok()
+            expect(v50:find("%[No stack trace available")).to.be.ok()
+        end)
+        it("should allow callable tables", function()
+            local v52 = v_u_1.new((setmetatable({}, {
+                ["__call"] = function(_, p51)
+                    p51(1)
+                end
+            })))
+            local v_u_53 = false
+            local v55 = {
+                ["__call"] = function(_, p54)
+                    expect(p54).to.equal(1)
+                    v_u_53 = true
+                end
+            }
+            v52:andThen((setmetatable({}, v55)))
+            expect(v_u_53).to.equal(true)
+        end)
+        it("should close the thread after resolve", function()
+            local v_u_56 = 0
+            v_u_1.new(function(p57)
+                v_u_56 = v_u_56 + 1
+                p57()
+                v_u_1.delay(1):await()
+                v_u_56 = v_u_56 + 1
+            end)
+            task.wait(1)
+            expect(v_u_56).to.equal(1)
+        end)
+    end)
+    describe("Promise.defer", function()
+        it("should execute after the time event", function()
+            local v_u_58 = 0
+            local v63 = v_u_1.defer(function(p59, p60, p61, p62)
+                expect((type(p59))).to.equal("function")
+                expect((type(p60))).to.equal("function")
+                expect((type(p61))).to.equal("function")
+                expect((type(p62))).to.equal("nil")
+                v_u_58 = v_u_58 + 1
+                p59("foo")
+            end)
+            expect(v_u_58).to.equal(0)
+            expect(v63:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_6()
+            expect(v_u_58).to.equal(1)
+            expect(v63:getStatus()).to.equal(v_u_1.Status.Resolved)
+            v_u_6()
+            expect(v_u_58).to.equal(1)
+        end)
+    end)
+    describe("Promise.delay", function()
+        it("should schedule promise resolution", function()
+            local v64 = v_u_1.delay(1)
+            expect(v64:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_6()
+            expect(v64:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_6(1)
+            expect(v64:getStatus()).to.equal(v_u_1.Status.Resolved)
+        end)
+        it("should allow for delays to be cancelled", function()
+            local v_u_65 = v_u_1.delay(2)
+            v_u_1.delay(1):andThen(function()
+                v_u_65:cancel()
+            end)
+            expect(v_u_65:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_6()
+            expect(v_u_65:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_6(1)
+            expect(v_u_65:getStatus()).to.equal(v_u_1.Status.Cancelled)
+            v_u_6(1)
+        end)
+    end)
+    describe("Promise.resolve", function()
+        it("should immediately resolve with a value", function()
+            local v66 = v_u_1.resolve(5, 6)
+            expect(v66).to.be.ok()
+            expect(v66:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v66._values[1]).to.equal(5)
+            expect(v66._values[2]).to.equal(6)
+        end)
+        it("should chain onto passed promises", function()
+            local v68 = v_u_1.resolve(v_u_1.new(function(_, p67)
+                p67(7)
+            end))
+            expect(v68).to.be.ok()
+            expect(v68:getStatus()).to.equal(v_u_1.Status.Rejected)
+            expect(v68._values[1]).to.equal(7)
+        end)
+    end)
+    describe("Promise.reject", function()
+        it("should immediately reject with a value", function()
+            local v69 = v_u_1.reject(6, 7)
+            expect(v69).to.be.ok()
+            expect(v69:getStatus()).to.equal(v_u_1.Status.Rejected)
+            expect(v69._values[1]).to.equal(6)
+            expect(v69._values[2]).to.equal(7)
+        end)
+        it("should pass a promise as-is as an error", function()
+            local v71 = v_u_1.new(function(p70)
+                p70(6)
+            end)
+            local v72 = v_u_1.reject(v71)
+            expect(v72).to.be.ok()
+            expect(v72:getStatus()).to.equal(v_u_1.Status.Rejected)
+            expect(v72._values[1]).to.equal(v71)
+        end)
+    end)
+    describe("Promise:andThen", function()
+        it("should allow yielding", function()
+            local v_u_73 = Instance.new("BindableEvent")
+            local v74 = v_u_1.resolve():andThen(function()
+                v_u_73.Event:Wait()
+                return 5
+            end)
+            expect(v74:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_73:Fire()
+            task.defer(coroutine.running())
+            coroutine.yield()
+            expect(v74:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v74._values[1]).to.equal(5)
+        end)
+        it("should run andThens on a new thread", function()
+            local v_u_75 = Instance.new("BindableEvent")
+            local v_u_76 = nil
+            local v78 = v_u_1.new(function(p77)
+                v_u_76 = p77
+            end)
+            local v79 = v78:andThen(function()
+                v_u_75.Event:Wait()
+                return 5
+            end)
+            local v80 = v78:andThen(function()
+                return "foo"
+            end)
+            expect(v78:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_76()
+            expect(v80:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v80._values[1]).to.equal("foo")
+            expect(v79:getStatus()).to.equal(v_u_1.Status.Started)
+        end)
+        it("should chain onto resolved promises", function()
+            local v_u_81 = nil
+            local v_u_82 = nil
+            local v_u_83 = 0
+            local v_u_84 = 0
+            local v85 = v_u_1.resolve(5)
+            local v88 = v85:andThen(function(...)
+                local v86, v87 = v_u_7(...)
+                v_u_82 = v86
+                v_u_81 = v87
+                v_u_83 = v_u_83 + 1
+            end, function()
+                v_u_84 = v_u_84 + 1
+            end)
+            expect(v_u_84).to.equal(0)
+            expect(v_u_83).to.equal(1)
+            expect(v_u_82).to.equal(1)
+            expect(v_u_81[1]).to.equal(5)
+            expect(v85).to.be.ok()
+            expect(v85:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v85._values[1]).to.equal(5)
+            expect(v88).to.be.ok()
+            expect(v88).never.to.equal(v85)
+            expect(v88:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(#v88._values).to.equal(0)
+        end)
+        it("should chain onto rejected promises", function()
+            local v_u_89 = nil
+            local v_u_90 = nil
+            local v_u_91 = 0
+            local v_u_92 = 0
+            local v93 = v_u_1.reject(5)
+            local v96 = v93:andThen(function(...)
+                v_u_92 = v_u_92 + 1
+            end, function(...)
+                local v94, v95 = v_u_7(...)
+                v_u_90 = v94
+                v_u_89 = v95
+                v_u_91 = v_u_91 + 1
+            end)
+            expect(v_u_92).to.equal(0)
+            expect(v_u_91).to.equal(1)
+            expect(v_u_90).to.equal(1)
+            expect(v_u_89[1]).to.equal(5)
+            expect(v93).to.be.ok()
+            expect(v93:getStatus()).to.equal(v_u_1.Status.Rejected)
+            expect(v93._values[1]).to.equal(5)
+            expect(v96).to.be.ok()
+            expect(v96).never.to.equal(v93)
+            expect(v96:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(#v96._values).to.equal(0)
+        end)
+        it("should reject on error in callback", function()
+            local v_u_97 = 0
+            local v98 = v_u_1.resolve(1):andThen(function()
+                v_u_97 = v_u_97 + 1
+                error("hahah")
+            end)
+            expect(v98).to.be.ok()
+            expect(v_u_97).to.equal(1)
+            expect(v98:getStatus()).to.equal(v_u_1.Status.Rejected)
+            local v99 = expect
+            local v100 = v98._values[1]
+            v99(tostring(v100):find("hahah")).to.be.ok()
+            local v101 = expect
+            local v102 = v98._values[1]
+            v101(tostring(v102):find("init.spec")).to.be.ok()
+            local v103 = expect
+            local v104 = v98._values[1]
+            v103(tostring(v104):find("runExecutor")).to.be.ok()
+        end)
+        it("should chain onto asynchronously resolved promises", function()
+            local v_u_105 = nil
+            local v_u_106 = nil
+            local v_u_107 = 0
+            local v_u_108 = 0
+            local v_u_109 = nil
+            local v111 = v_u_1.new(function(p110)
+                v_u_109 = p110
+            end)
+            local v112 = v111:andThen(function(...)
+                v_u_105 = { ... }
+                v_u_106 = select("#", ...)
+                v_u_107 = v_u_107 + 1
+            end, function()
+                v_u_108 = v_u_108 + 1
+            end)
+            expect(v_u_107).to.equal(0)
+            expect(v_u_108).to.equal(0)
+            v_u_109(6)
+            expect(v_u_108).to.equal(0)
+            expect(v_u_107).to.equal(1)
+            expect(v_u_106).to.equal(1)
+            expect(v_u_105[1]).to.equal(6)
+            expect(v111).to.be.ok()
+            expect(v111:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v111._values[1]).to.equal(6)
+            expect(v112).to.be.ok()
+            expect(v112).never.to.equal(v111)
+            expect(v112:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(#v112._values).to.equal(0)
+        end)
+        it("should chain onto asynchronously rejected promises", function()
+            local v_u_113 = nil
+            local v_u_114 = nil
+            local v_u_115 = 0
+            local v_u_116 = 0
+            local v_u_117 = nil
+            local v119 = v_u_1.new(function(_, p118)
+                v_u_117 = p118
+            end)
+            local v120 = v119:andThen(function()
+                v_u_116 = v_u_116 + 1
+            end, function(...)
+                v_u_113 = { ... }
+                v_u_114 = select("#", ...)
+                v_u_115 = v_u_115 + 1
+            end)
+            expect(v_u_115).to.equal(0)
+            expect(v_u_116).to.equal(0)
+            v_u_117(6)
+            expect(v_u_116).to.equal(0)
+            expect(v_u_115).to.equal(1)
+            expect(v_u_114).to.equal(1)
+            expect(v_u_113[1]).to.equal(6)
+            expect(v119).to.be.ok()
+            expect(v119:getStatus()).to.equal(v_u_1.Status.Rejected)
+            expect(v119._values[1]).to.equal(6)
+            expect(v120).to.be.ok()
+            expect(v120).never.to.equal(v119)
+            expect(v120:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(#v120._values).to.equal(0)
+        end)
+        it("should propagate errors through multiple levels", function()
+            local v_u_121 = nil
+            local v_u_122 = nil
+            local v_u_123 = nil
+            v_u_1.new(function(_, p124)
+                p124(1, 2, 3)
+            end):andThen(function() end):catch(function(p125, p126, p127)
+                v_u_121 = p125
+                v_u_122 = p126
+                v_u_123 = p127
+            end)
+            expect(v_u_121).to.equal(1)
+            expect(v_u_122).to.equal(2)
+            expect(v_u_123).to.equal(3)
+        end)
+        itSKIP("should not call queued callbacks from a cancelled sub-promise", function()
+            local v_u_128 = nil
+            local v_u_129 = 0
+            local v131 = v_u_1.new(function(p130)
+                v_u_128 = p130
+            end)
+            v131:andThen(function()
+                v_u_129 = v_u_129 + 1
+            end)
+            v131:andThen(function()
+                v_u_129 = v_u_129 + 1
+            end):cancel()
+            v_u_128("foo")
+            expect(v_u_129).to.equal(1)
+        end)
+    end)
+    describe("Promise:cancel", function()
+        it("should mark promises as cancelled and not resolve or reject them", function()
+            local v_u_132 = 0
+            local v_u_133 = 0
+            local v134 = v_u_1.new(function() end):andThen(function()
+                v_u_132 = v_u_132 + 1
+            end):finally(function()
+                v_u_133 = v_u_133 + 1
+            end)
+            v134:cancel()
+            v134:cancel()
+            expect(v_u_132).to.equal(0)
+            expect(v_u_133).to.equal(1)
+            expect(v134:getStatus()).to.equal(v_u_1.Status.Cancelled)
+        end)
+        it("should call the cancellation hook once", function()
+            local v_u_135 = 0
+            local v137 = v_u_1.new(function(_, _, p136)
+                p136(function()
+                    v_u_135 = v_u_135 + 1
+                end)
+            end)
+            v137:cancel()
+            v137:cancel()
+            expect(v_u_135).to.equal(1)
+        end)
+        it("should propagate cancellations", function()
+            local v138 = v_u_1.new(function() end)
+            local v139 = v138:andThen()
+            local v140 = v138:andThen()
+            expect(v138:getStatus()).to.equal(v_u_1.Status.Started)
+            expect(v139:getStatus()).to.equal(v_u_1.Status.Started)
+            expect(v140:getStatus()).to.equal(v_u_1.Status.Started)
+            v139:cancel()
+            expect(v138:getStatus()).to.equal(v_u_1.Status.Started)
+            expect(v139:getStatus()).to.equal(v_u_1.Status.Cancelled)
+            expect(v140:getStatus()).to.equal(v_u_1.Status.Started)
+            v140:cancel()
+            expect(v138:getStatus()).to.equal(v_u_1.Status.Cancelled)
+            expect(v139:getStatus()).to.equal(v_u_1.Status.Cancelled)
+            expect(v140:getStatus()).to.equal(v_u_1.Status.Cancelled)
+        end)
+        it("should affect downstream promises", function()
+            local v141 = v_u_1.new(function() end)
+            local v142 = v141:andThen()
+            v141:cancel()
+            expect(v142:getStatus()).to.equal(v_u_1.Status.Cancelled)
+        end)
+        it("should track consumers", function()
+            local v_u_143 = v_u_1.new(function() end)
+            local v144 = v_u_1.resolve()
+            local v_u_145 = v144:andThen(function()
+                return v_u_143
+            end)
+            local v147 = v_u_1.new(function(p146)
+                p146(v_u_145)
+            end)
+            local v148 = v147:andThen(function() end)
+            expect(v_u_145._parent).to.never.equal(v144)
+            expect(v147._parent).to.never.equal(v_u_145)
+            expect(v147._consumers[v148]).to.be.ok()
+            expect(v148._parent).to.equal(v147)
+        end)
+        it("should cancel resolved pending promises", function()
+            local v_u_149 = v_u_1.new(function() end)
+            local v151 = v_u_1.new(function(p150)
+                p150(v_u_149)
+            end):finally(function() end)
+            v151:cancel()
+            expect(v_u_149._status).to.equal(v_u_1.Status.Cancelled)
+            expect(v151._status).to.equal(v_u_1.Status.Cancelled)
+        end)
+        it("should close the promise thread", function()
+            local v_u_152 = 0
+            v_u_1.new(function()
+                v_u_152 = v_u_152 + 1
+                v_u_1.delay(1):await()
+                v_u_152 = v_u_152 + 1
+            end):cancel()
+            v_u_6(2)
+            expect(v_u_152).to.equal(1)
+        end)
+    end)
+    describe("Promise:finally", function()
+        it("should be called upon resolve, reject, or cancel", function()
+            local v_u_153 = 0
+            local function v154()
+                v_u_153 = v_u_153 + 1
+            end
+            v_u_1.new(function(p155, _)
+                p155()
+            end):finally(v154)
+            v_u_1.resolve():andThen(function() end):finally(v154):finally(v154)
+            v_u_1.reject():finally(v154)
+            v_u_1.new(function() end):finally(v154):cancel()
+            expect(v_u_153).to.equal(5)
+        end)
+        itSKIP("should not forward return values", function()
+            local v_u_156 = nil
+            v_u_1.resolve(2):finally(function()
+                return 1
+            end):andThen(function(p157)
+                v_u_156 = p157
+            end)
+            expect(v_u_156).to.equal(2)
+        end)
+        itSKIP("should not consume rejections", function()
+            local v_u_158 = false
+            local v_u_159 = false
+            v_u_1.reject(5):finally(function()
+                return 42
+            end):andThen(function()
+                v_u_159 = true
+            end):catch(function(p160)
+                v_u_158 = true
+                expect(p160).to.equal(5)
+            end)
+            expect(v_u_158).to.equal(true)
+            expect(v_u_159).to.equal(false)
+        end)
+        itSKIP("should wait for returned promises", function()
+            local v_u_161 = nil
+            local v163 = v_u_1.reject("foo"):finally(function()
+                return v_u_1.new(function(p162)
+                    v_u_161 = p162
+                end)
+            end)
+            expect(v163:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_161()
+            expect(v163:getStatus()).to.equal(v_u_1.Status.Rejected)
+            local _, v164 = v163:_unwrap()
+            expect(v164).to.equal("foo")
+        end)
+        it("should reject with a returned rejected promise\'s value", function()
+            local v_u_165 = nil
+            local v167 = v_u_1.reject("foo"):finally(function()
+                return v_u_1.new(function(_, p166)
+                    v_u_165 = p166
+                end)
+            end)
+            expect(v167:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_165("bar")
+            expect(v167:getStatus()).to.equal(v_u_1.Status.Rejected)
+            local _, v168 = v167:_unwrap()
+            expect(v168).to.equal("bar")
+        end)
+        it("should reject when handler errors", function()
+            local v_u_169 = {}
+            local v170, v171 = v_u_1.reject("bar"):finally(function()
+                error(v_u_169)
+            end):_unwrap()
+            expect(v170).to.equal(false)
+            expect(v171).to.equal(v_u_169)
+        end)
+        itSKIP("should not prevent cancellation", function()
+            local v172 = v_u_1.new(function() end)
+            local v_u_173 = false
+            v172:finally(function()
+                v_u_173 = true
+            end)
+            v172:andThen(function() end):cancel()
+            expect(v172:getStatus()).to.equal(v_u_1.Status.Cancelled)
+            expect(v_u_173).to.equal(true)
+        end)
+        it("should propagate cancellation downwards", function()
+            local v_u_174 = false
+            local v175 = v_u_1.new(function() end)
+            local v176 = v175:finally(function()
+                v_u_174 = true
+            end)
+            v175:cancel()
+            expect(v175:getStatus()).to.equal(v_u_1.Status.Cancelled)
+            expect(v176:getStatus()).to.equal(v_u_1.Status.Cancelled)
+            expect(v_u_174).to.equal(true)
+            expect(false).to.equal(false)
+        end)
+        it("should propagate cancellation upwards", function()
+            local v_u_177 = false
+            local v178 = v_u_1.new(function() end)
+            local v179 = v178:finally(function()
+                v_u_177 = true
+            end)
+            v179:cancel()
+            expect(v178:getStatus()).to.equal(v_u_1.Status.Cancelled)
+            expect(v179:getStatus()).to.equal(v_u_1.Status.Cancelled)
+            expect(v_u_177).to.equal(true)
+            expect(false).to.equal(false)
+        end)
+        it("should cancel returned promise if cancelled", function()
+            local v_u_180 = v_u_1.new(function() end)
+            v_u_1.resolve():finally(function()
+                return v_u_180
+            end):cancel()
+            expect(v_u_180:getStatus()).to.equal(v_u_1.Status.Cancelled)
+        end)
+    end)
+    describe("Promise.all", function()
+        it("should error if given something other than a table", function()
+            expect(function()
+                v_u_1.all(1)
+            end).to.throw()
+        end)
+        it("should resolve instantly with an empty table if given no promises", function()
+            local v181 = v_u_1.all({})
+            local v182, v183 = v181:_unwrap()
+            expect(v182).to.equal(true)
+            expect(v181:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v183).to.be.a("table")
+            expect(next(v183)).to.equal(nil)
+        end)
+        it("should error if given non-promise values", function()
+            expect(function()
+                v_u_1.all({
+                    {},
+                    {},
+                    {}
+                })
+            end).to.throw()
+        end)
+        it("should wait for all promises to be resolved and return their values", function()
+            local v184, v_u_185 = v_u_7(1, "A string", nil, false)
+            local v_u_186 = {}
+            local v187 = {}
+            for v_u_188 = 1, v184 do
+                v187[v_u_188] = v_u_1.new(function(p189)
+                    v_u_186[v_u_188] = { p189, v_u_185[v_u_188] }
+                end)
+            end
+            local v190 = v_u_1.all(v187)
+            for _, v191 in ipairs(v_u_186) do
+                expect(v190:getStatus()).to.equal(v_u_1.Status.Started)
+                v191[1](v191[2])
+            end
+            local v192, v193 = v_u_7(v190:_unwrap())
+            local v194, v195 = unpack(v193, 1, v192)
+            expect(v192).to.equal(2)
+            expect(v194).to.equal(true)
+            expect(v195).to.be.a("table")
+            expect(#v195).to.equal(#v187)
+            for v196 = 1, v184 do
+                expect(v195[v196]).to.equal(v_u_185[v196])
+            end
+        end)
+        it("should reject if any individual promise rejected", function()
+            local v_u_197 = nil
+            local v_u_198 = nil
+            local v200 = v_u_1.new(function(_, p199)
+                v_u_197 = p199
+            end)
+            local v202 = v_u_1.new(function(p201)
+                v_u_198 = p201
+            end)
+            local v203 = v_u_1.all({ v200, v202 })
+            expect(v203:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_197("baz", "qux")
+            v_u_198("foo", "bar")
+            local v204, v205 = v_u_7(v203:_unwrap())
+            local v206, v207, v208 = unpack(v205, 1, v204)
+            expect(v204).to.equal(3)
+            expect(v206).to.equal(false)
+            expect(v207).to.equal("baz")
+            expect(v208).to.equal("qux")
+            expect(v202:getStatus()).to.equal(v_u_1.Status.Cancelled)
+        end)
+        it("should not resolve if resolved after rejecting", function()
+            local v_u_209 = nil
+            local v_u_210 = nil
+            local v213 = { v_u_1.new(function(_, p211)
+                    v_u_209 = p211
+                end), (v_u_1.new(function(p212)
+                    v_u_210 = p212
+                end)) }
+            local v214 = v_u_1.all(v213)
+            expect(v214:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_209("baz", "qux")
+            v_u_210("foo", "bar")
+            local v215, v216 = v_u_7(v214:_unwrap())
+            local v217, v218, v219 = unpack(v216, 1, v215)
+            expect(v215).to.equal(3)
+            expect(v217).to.equal(false)
+            expect(v218).to.equal("baz")
+            expect(v219).to.equal("qux")
+        end)
+        it("should only reject once", function()
+            local v_u_220 = nil
+            local v_u_221 = nil
+            local v224 = { v_u_1.new(function(_, p222)
+                    v_u_220 = p222
+                end), (v_u_1.new(function(_, p223)
+                    v_u_221 = p223
+                end)) }
+            local v225 = v_u_1.all(v224)
+            expect(v225:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_220("foo", "bar")
+            expect(v225:getStatus()).to.equal(v_u_1.Status.Rejected)
+            v_u_221("baz", "qux")
+            local v226, v227 = v_u_7(v225:_unwrap())
+            local v228, v229, v230 = unpack(v227, 1, v226)
+            expect(v226).to.equal(3)
+            expect(v228).to.equal(false)
+            expect(v229).to.equal("foo")
+            expect(v230).to.equal("bar")
+        end)
+        itSKIP("should error if a non-array table is passed in", function()
+            local v231, v232 = pcall(function()
+                v_u_1.all(v_u_1.new(function() end))
+            end)
+            expect(v231).to.be.ok()
+            expect(v232:find("Non%-promise")).to.be.ok()
+        end)
+        it("should cancel pending promises if one rejects", function()
+            local v233 = v_u_1.new(function() end)
+            expect(v_u_1.all({ v_u_1.resolve(), v_u_1.reject(), v233 }):getStatus()).to.equal(v_u_1.Status.Rejected)
+            expect(v233:getStatus()).to.equal(v_u_1.Status.Cancelled)
+        end)
+        it("should cancel promises if it is cancelled", function()
+            local v234 = v_u_1.new(function() end)
+            v234:andThen(function() end)
+            local v235 = { v_u_1.new(function() end), v_u_1.new(function() end), v234 }
+            v_u_1.all(v235):cancel()
+            expect(v235[1]:getStatus()).to.equal(v_u_1.Status.Cancelled)
+            expect(v235[2]:getStatus()).to.equal(v_u_1.Status.Cancelled)
+            expect(v235[3]:getStatus()).to.equal(v_u_1.Status.Started)
+        end)
+    end)
+    describe("Promise.fold", function()
+        it("should return the initial value in a promise when the list is empty", function()
+            local v236 = {}
+            local v237 = v_u_1.fold({}, function()
+                error("should not be called")
+            end, v236)
+            expect(v_u_1.is(v237)).to.equal(true)
+            expect(v237:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v237:expect()).to.equal(v236)
+        end)
+        it("should accept promises in the list", function()
+            local v_u_238 = nil
+            local v242 = v_u_1.fold({ v_u_1.new(function(p239)
+                    v_u_238 = p239
+                end), 2, 3 }, function(p240, p241)
+                return p240 + p241
+            end, 0)
+            v_u_238(1)
+            expect(v_u_1.is(v242)).to.equal(true)
+            expect(v242:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v242:expect()).to.equal(6)
+        end)
+        it("should always return a promise even if the list or reducer don\'t use them", function()
+            local v246 = v_u_1.fold({ 1, 2, 3 }, function(p243, p244, p245)
+                if p245 == 2 then
+                    return v_u_1.delay(1):andThenReturn(p243 + p244)
+                else
+                    return p243 + p244
+                end
+            end, 0)
+            expect(v_u_1.is(v246)).to.equal(true)
+            expect(v246:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_6(2)
+            expect(v246:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v246:expect()).to.equal(6)
+        end)
+        it("should return the first rejected promise", function()
+            local v250 = v_u_1.fold({ 1, 2, 3 }, function(p247, p248, p249)
+                if p249 == 2 then
+                    return v_u_1.reject("foo")
+                else
+                    return p247 + p248
+                end
+            end, 0)
+            expect(v_u_1.is(v250)).to.equal(true)
+            local v251, v252 = v250:awaitStatus()
+            expect(v251).to.equal(v_u_1.Status.Rejected)
+            expect(v252).to.equal("foo")
+        end)
+        it("should return the first canceled promise", function()
+            local v_u_253 = nil
+            local v257 = v_u_1.fold({ 1, 2, 3 }, function(p254, p255, p256)
+                if p256 == 1 then
+                    return p254 + p255
+                end
+                if p256 == 2 then
+                    v_u_253 = v_u_1.delay(1):andThenReturn(p254 + p255)
+                    return v_u_253
+                end
+                error("this should not run if the promise is cancelled")
+            end, 0)
+            expect(v_u_1.is(v257)).to.equal(true)
+            expect(v257:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_253:cancel()
+            expect(v257:getStatus()).to.equal(v_u_1.Status.Cancelled)
+        end)
+    end)
+    describe("Promise.race", function()
+        it("should resolve with the first settled value", function()
+            local v259 = v_u_1.race({ v_u_1.resolve(1), v_u_1.resolve(2) }):andThen(function(p258)
+                expect(p258).to.equal(1)
+            end)
+            expect(v259:getStatus()).to.equal(v_u_1.Status.Resolved)
+        end)
+        it("should cancel other promises", function()
+            local v260 = v_u_1.new(function() end)
+            v260:andThen(function() end)
+            local v262 = { v260, v_u_1.new(function() end), v_u_1.new(function(p261)
+                    p261(2)
+                end) }
+            local v263 = v_u_1.race(v262)
+            expect(v263:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v263._values[1]).to.equal(2)
+            expect(v262[1]:getStatus()).to.equal(v_u_1.Status.Started)
+            expect(v262[2]:getStatus()).to.equal(v_u_1.Status.Cancelled)
+            expect(v262[3]:getStatus()).to.equal(v_u_1.Status.Resolved)
+            local v264 = v_u_1.new(function() end)
+            expect(v_u_1.race({ v_u_1.reject(), v_u_1.resolve(), v264 }):getStatus()).to.equal(v_u_1.Status.Rejected)
+            expect(v264:getStatus()).to.equal(v_u_1.Status.Cancelled)
+        end)
+        it("should error if a non-array table is passed in", function()
+            local v265, v266 = pcall(function()
+                v_u_1.race(v_u_1.new(function() end))
+            end)
+            expect(v265).to.be.ok()
+            expect(v266:find("Non%-promise")).to.be.ok()
+        end)
+        it("should cancel promises if it is cancelled", function()
+            local v267 = v_u_1.new(function() end)
+            v267:andThen(function() end)
+            local v268 = { v_u_1.new(function() end), v_u_1.new(function() end), v267 }
+            v_u_1.race(v268):cancel()
+            expect(v268[1]:getStatus()).to.equal(v_u_1.Status.Cancelled)
+            expect(v268[2]:getStatus()).to.equal(v_u_1.Status.Cancelled)
+            expect(v268[3]:getStatus()).to.equal(v_u_1.Status.Started)
+        end)
+    end)
+    describe("Promise.promisify", function()
+        it("should wrap functions", function()
+            local v270 = v_u_1.promisify(function(p269)
+                return p269 + 1
+            end)(1)
+            local v271, v272 = v270:_unwrap()
+            expect(v271).to.equal(true)
+            expect(v270:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v272).to.equal(2)
+        end)
+        it("should catch errors after a yield", function()
+            local v_u_273 = Instance.new("BindableEvent")
+            local v274 = v_u_1.promisify(function()
+                v_u_273.Event:Wait()
+                error("errortext")
+            end)()
+            expect(v274:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_273:Fire()
+            task.defer(coroutine.running())
+            coroutine.yield()
+            expect(v274:getStatus()).to.equal(v_u_1.Status.Rejected)
+            local v275 = expect
+            local v276 = v274._values[1]
+            v275(tostring(v276):find("errortext")).to.be.ok()
+        end)
+    end)
+    describe("Promise.tap", function()
+        it("should thread through values", function()
+            local v_u_277 = nil
+            local v_u_278 = nil
+            v_u_1.resolve(1):andThen(function(p279)
+                return p279 + 1
+            end):tap(function(p280)
+                v_u_277 = p280
+                return p280 + 1
+            end):andThen(function(p281)
+                v_u_278 = p281
+            end)
+            expect(v_u_277).to.equal(2)
+            expect(v_u_278).to.equal(2)
+        end)
+        it("should chain onto promises", function()
+            local v_u_282 = nil
+            local v_u_283 = nil
+            local v286 = v_u_1.resolve(1):tap(function()
+                return v_u_1.new(function(p284)
+                    v_u_282 = p284
+                end)
+            end):andThen(function(p285)
+                v_u_283 = p285
+            end)
+            expect(v286:getStatus()).to.equal(v_u_1.Status.Started)
+            expect(v_u_283).to.never.be.ok()
+            v_u_282(1)
+            expect(v286:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v_u_283).to.equal(1)
+        end)
+    end)
+    describe("Promise.try", function()
+        it("should catch synchronous errors", function()
+            local v_u_287 = nil
+            v_u_1.try(function()
+                error("errortext")
+            end):catch(function(p288)
+                v_u_287 = tostring(p288)
+            end)
+            expect(v_u_287:find("errortext")).to.be.ok()
+        end)
+        it("should reject with error objects", function()
+            local v_u_289 = {}
+            local v290, v291 = v_u_1.try(function()
+                error(v_u_289)
+            end):_unwrap()
+            expect(v290).to.equal(false)
+            expect(v291).to.equal(v_u_289)
+        end)
+        it("should catch asynchronous errors", function()
+            local v_u_292 = Instance.new("BindableEvent")
+            local v293 = v_u_1.try(function()
+                v_u_292.Event:Wait()
+                error("errortext")
+            end)
+            expect(v293:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_292:Fire()
+            task.defer(coroutine.running())
+            coroutine.yield()
+            expect(v293:getStatus()).to.equal(v_u_1.Status.Rejected)
+            local v294 = expect
+            local v295 = v293._values[1]
+            v294(tostring(v295):find("errortext")).to.be.ok()
+        end)
+    end)
+    describe("Promise:andThenReturn", function()
+        it("should return the given values", function()
+            local v_u_296 = nil
+            local v_u_297 = nil
+            v_u_1.resolve():andThenReturn(1, 2):andThen(function(p298, p299)
+                v_u_296 = p298
+                v_u_297 = p299
+            end)
+            expect(v_u_296).to.equal(1)
+            expect(v_u_297).to.equal(2)
+        end)
+    end)
+    describe("Promise:doneReturn", function()
+        it("should return the given values", function()
+            local v_u_300 = nil
+            local v_u_301 = nil
+            v_u_1.resolve():doneReturn(1, 2):andThen(function(p302, p303)
+                v_u_300 = p302
+                v_u_301 = p303
+            end)
+            expect(v_u_300).to.equal(1)
+            expect(v_u_301).to.equal(2)
+        end)
+    end)
+    describe("Promise:andThenCall", function()
+        it("should call the given function with arguments", function()
+            local v_u_304 = nil
+            local v_u_305 = nil
+            v_u_1.resolve():andThenCall(function(p306, p307)
+                v_u_304 = p306
+                v_u_305 = p307
+            end, 3, 4)
+            expect(v_u_304).to.equal(3)
+            expect(v_u_305).to.equal(4)
+        end)
+    end)
+    describe("Promise:andThenAsync", function()
+        it("should allow yielding", function()
+            local v308 = Instance.new("BindableEvent")
+            local v309 = v_u_1.fromEvent(v308.Event):andThenAsync(function()
+                return 5
+            end)
+            expect(v309:getStatus()).to.equal(v_u_1.Status.Started)
+            v308:Fire()
+            expect(v309:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_6()
+            expect(v309:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v309._values[1]).to.equal(5)
+        end)
+        it("should run andThenAsync on a new thread", function()
+            local v_u_310 = Instance.new("BindableEvent")
+            local v_u_311 = nil
+            local v313 = v_u_1.new(function(p312)
+                v_u_311 = p312
+            end)
+            local v314 = v313:andThenAsync(function()
+                v_u_310.Event:Wait()
+                return 5
+            end)
+            local v315 = v313:andThenAsync(function()
+                return "foo"
+            end)
+            expect(v313:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_311()
+            expect(v315:getStatus()).to.equal(v_u_1.Status.Started)
+            expect(v314:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_6()
+            expect(v315:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v315._values[1]).to.equal("foo")
+            expect(v314:getStatus()).to.equal(v_u_1.Status.Started)
+        end)
+        it("should chain onto resolved promises", function()
+            local v_u_316 = nil
+            local v_u_317 = nil
+            local v_u_318 = 0
+            local v_u_319 = 0
+            local v320 = v_u_1.resolve(5)
+            local v323 = v320:andThenAsync(function(...)
+                local v321, v322 = v_u_7(...)
+                v_u_317 = v321
+                v_u_316 = v322
+                v_u_318 = v_u_318 + 1
+            end, function()
+                v_u_319 = v_u_319 + 1
+            end)
+            expect(v_u_319).to.equal(0)
+            expect(v_u_318).to.equal(0)
+            expect(v323).to.be.ok()
+            expect(v323).never.to.equal(v320)
+            expect(v323:getStatus()).to.equal(v_u_1.Status.Started)
+            expect(v320).to.be.ok()
+            expect(v320:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v320._values[1]).to.equal(5)
+            v_u_6()
+            expect(v_u_318).to.equal(1)
+            expect(v_u_317).to.equal(1)
+            expect(v_u_316[1]).to.equal(5)
+            expect(v323:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(#v323._values).to.equal(0)
+        end)
+        it("should chain onto rejected promises", function()
+            local v_u_324 = nil
+            local v_u_325 = nil
+            local v_u_326 = 0
+            local v_u_327 = 0
+            local v328 = v_u_1.reject(5)
+            local v331 = v328:andThenAsync(function(...)
+                v_u_327 = v_u_327 + 1
+            end, function(...)
+                local v329, v330 = v_u_7(...)
+                v_u_325 = v329
+                v_u_324 = v330
+                v_u_326 = v_u_326 + 1
+            end)
+            expect(v_u_327).to.equal(0)
+            expect(v_u_326).to.equal(0)
+            expect(v328).to.be.ok()
+            expect(v328:getStatus()).to.equal(v_u_1.Status.Rejected)
+            expect(v328._values[1]).to.equal(5)
+            expect(v331).to.be.ok()
+            expect(v331).never.to.equal(v328)
+            expect(v331:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_6()
+            expect(v_u_326).to.equal(1)
+            expect(v_u_325).to.equal(1)
+            expect(v_u_324[1]).to.equal(5)
+            expect(v331:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(#v331._values).to.equal(0)
+        end)
+        it("should reject on error in callback", function()
+            local v_u_332 = 0
+            local v333 = v_u_1.resolve(1):andThenAsync(function()
+                v_u_332 = v_u_332 + 1
+                error("hahah")
+            end)
+            expect(v333).to.be.ok()
+            expect(v333:getStatus()).to.equal(v_u_1.Status.Started)
+            expect(v_u_332).to.equal(0)
+            v_u_6()
+            expect(v_u_332).to.equal(1)
+            expect(v333:getStatus()).to.equal(v_u_1.Status.Rejected)
+            local v334 = expect
+            local v335 = v333._values[1]
+            v334(tostring(v335):find("hahah")).to.be.ok()
+            local v336 = expect
+            local v337 = v333._values[1]
+            v336(tostring(v337):find("init.spec")).to.be.ok()
+            local v338 = expect
+            local v339 = v333._values[1]
+            v338(tostring(v339):find("runExecutor")).to.be.ok()
+        end)
+        it("should chain onto asynchronously resolved promises", function()
+            local v_u_340 = nil
+            local v_u_341 = nil
+            local v_u_342 = 0
+            local v_u_343 = 0
+            local v_u_344 = nil
+            local v346 = v_u_1.new(function(p345)
+                v_u_344 = p345
+            end)
+            local v347 = v346:andThenAsync(function(...)
+                v_u_340 = { ... }
+                v_u_341 = select("#", ...)
+                v_u_342 = v_u_342 + 1
+            end, function()
+                v_u_343 = v_u_343 + 1
+            end)
+            expect(v_u_342).to.equal(0)
+            expect(v_u_343).to.equal(0)
+            v_u_344(6)
+            expect(v_u_342).to.equal(0)
+            expect(v_u_343).to.equal(0)
+            expect(v346).to.be.ok()
+            expect(v346:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v347).to.be.ok()
+            expect(v347).never.to.equal(v346)
+            expect(v347:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_6()
+            expect(v_u_343).to.equal(0)
+            expect(v_u_342).to.equal(1)
+            expect(v_u_341).to.equal(1)
+            expect(v_u_340[1]).to.equal(6)
+            expect(v346:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v346._values[1]).to.equal(6)
+            expect(v347:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(#v347._values).to.equal(0)
+        end)
+        it("should chain onto asynchronously rejected promises", function()
+            local v_u_348 = nil
+            local v_u_349 = nil
+            local v_u_350 = 0
+            local v_u_351 = 0
+            local v_u_352 = nil
+            local v354 = v_u_1.new(function(_, p353)
+                v_u_352 = p353
+            end)
+            local v355 = v354:andThenAsync(function()
+                v_u_351 = v_u_351 + 1
+            end, function(...)
+                v_u_348 = { ... }
+                v_u_349 = select("#", ...)
+                v_u_350 = v_u_350 + 1
+            end)
+            expect(v_u_350).to.equal(0)
+            expect(v_u_351).to.equal(0)
+            v_u_352(6)
+            expect(v_u_350).to.equal(0)
+            expect(v_u_351).to.equal(0)
+            expect(v354).to.be.ok()
+            expect(v354:getStatus()).to.equal(v_u_1.Status.Rejected)
+            expect(v355).to.be.ok()
+            expect(v355).never.to.equal(v354)
+            expect(v355:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_6()
+            expect(v_u_351).to.equal(0)
+            expect(v_u_350).to.equal(1)
+            expect(v_u_349).to.equal(1)
+            expect(v_u_348[1]).to.equal(6)
+            expect(v355:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v354._values[1]).to.equal(6)
+            expect(#v355._values).to.equal(0)
+        end)
+        it("should propagate errors through multiple levels", function()
+            local v_u_356 = nil
+            local v_u_357 = nil
+            local v_u_358 = nil
+            v_u_1.new(function(_, p359)
+                p359(1, 2, 3)
+            end):andThenAsync(function() end):catch(function(p360, p361, p362)
+                v_u_356 = p360
+                v_u_357 = p361
+                v_u_358 = p362
+            end)
+            expect(v_u_356).to.equal(nil)
+            expect(v_u_357).to.equal(nil)
+            expect(v_u_358).to.equal(nil)
+            v_u_6()
+            expect(v_u_356).to.equal(1)
+            expect(v_u_357).to.equal(2)
+            expect(v_u_358).to.equal(3)
+        end)
+        it("should propagate errors asynchronously through multiple levels", function()
+            local v_u_363 = nil
+            local v_u_364 = nil
+            local v_u_365 = nil
+            local function v369(p366, p367, p368)
+                v_u_363 = p366
+                v_u_364 = p367
+                v_u_365 = p368
+                return v_u_1.reject(p366 * 10, p367 * 10, p368 * 10)
+            end
+            v_u_1.new(function(_, p370)
+                p370(1, 2, 3)
+            end):andThenAsync(function() end, v369):andThenAsync(function() end, v369):andThenAsync(function() end, v369):catch(function(p371, p372, p373)
+                local v374 = "caught " .. tostring(p371)
+                local v375 = "caught " .. tostring(p372)
+                local v376 = "caught " .. tostring(p373)
+                v_u_363 = v374
+                v_u_364 = v375
+                v_u_365 = v376
+            end)
+            expect(v_u_363).to.equal(nil)
+            expect(v_u_364).to.equal(nil)
+            expect(v_u_365).to.equal(nil)
+            v_u_6()
+            expect(v_u_363).to.equal(1)
+            expect(v_u_364).to.equal(2)
+            expect(v_u_365).to.equal(3)
+            v_u_6()
+            expect(v_u_363).to.equal(10)
+            expect(v_u_364).to.equal(20)
+            expect(v_u_365).to.equal(30)
+            v_u_6()
+            expect(v_u_363).to.equal("caught 1000")
+            expect(v_u_364).to.equal("caught 2000")
+            expect(v_u_365).to.equal("caught 3000")
+        end)
+        it("should NOT propagate errors if error handler is provided", function()
+            local v_u_377 = nil
+            local v_u_378 = nil
+            local v_u_379 = nil
+            v_u_1.new(function(_, p380)
+                p380(1, 2, 3)
+            end):andThenAsync(function() end, function() end):catch(function(p381, p382, p383)
+                v_u_377 = p381
+                v_u_378 = p382
+                v_u_379 = p383
+            end)
+            expect(v_u_377).to.equal(nil)
+            expect(v_u_378).to.equal(nil)
+            expect(v_u_379).to.equal(nil)
+            v_u_6()
+            expect(v_u_377).to.equal(nil)
+            expect(v_u_378).to.equal(nil)
+            expect(v_u_379).to.equal(nil)
+        end)
+    end)
+    describe("Promise:doneCall", function()
+        it("should call the given function with arguments", function()
+            local v_u_384 = nil
+            local v_u_385 = nil
+            v_u_1.resolve():doneCall(function(p386, p387)
+                v_u_384 = p386
+                v_u_385 = p387
+            end, 3, 4)
+            expect(v_u_384).to.equal(3)
+            expect(v_u_385).to.equal(4)
+        end)
+    end)
+    describe("Promise:done", function()
+        it("should trigger on resolve or cancel", function()
+            local v388 = v_u_1.new(function() end)
+            local v_u_389 = nil
+            local v390 = v388:done(function()
+                v_u_389 = true
+            end)
+            expect(v_u_389).to.never.be.ok()
+            v388:cancel()
+            expect(v390:getStatus()).to.equal(v_u_1.Status.Cancelled)
+            expect(v_u_389).to.equal(true)
+            local v_u_391 = nil
+            local v_u_392 = nil
+            v_u_1.reject():done(function()
+                v_u_391 = true
+            end):finally(function()
+                v_u_392 = true
+            end)
+            expect(v_u_391).to.never.be.ok()
+            expect(v_u_392).to.be.ok()
+        end)
+    end)
+    describe("Promise.some", function()
+        it("should resolve once the goal is reached", function()
+            local v393 = v_u_1.some({ v_u_1.resolve(1), v_u_1.reject(), v_u_1.resolve(2) }, 2)
+            expect(v393:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v393._values[1][1]).to.equal(1)
+            expect(v393._values[1][2]).to.equal(2)
+        end)
+        it("should error if the goal can\'t be reached", function()
+            expect(v_u_1.some({ v_u_1.resolve(), v_u_1.reject() }, 2):getStatus()).to.equal(v_u_1.Status.Rejected)
+            local v_u_394 = nil
+            local v396 = v_u_1.some({ v_u_1.resolve(), v_u_1.new(function(_, p395)
+                    v_u_394 = p395
+                end) }, 2)
+            expect(v396:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_394("foo")
+            expect(v396:getStatus()).to.equal(v_u_1.Status.Rejected)
+            expect(v396._values[1]).to.equal("foo")
+        end)
+        it("should cancel pending Promises once the goal is reached", function()
+            local v_u_397 = nil
+            local v398 = v_u_1.new(function() end)
+            local v400 = v_u_1.new(function(p399)
+                v_u_397 = p399
+            end)
+            local v401 = v_u_1.some({ v398, v400, v_u_1.resolve() }, 2)
+            expect(v401:getStatus()).to.equal(v_u_1.Status.Started)
+            expect(v398:getStatus()).to.equal(v_u_1.Status.Started)
+            expect(v400:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_397()
+            expect(v401:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v398:getStatus()).to.equal(v_u_1.Status.Cancelled)
+            expect(v400:getStatus()).to.equal(v_u_1.Status.Resolved)
+        end)
+        it("should error if passed a non-number", function()
+            expect(function()
+                v_u_1.some({}, "non-number")
+            end).to.throw()
+        end)
+        it("should return an empty array if amount is 0", function()
+            local v402 = v_u_1.some({ v_u_1.resolve(2) }, 0)
+            expect(v402:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(#v402._values[1]).to.equal(0)
+        end)
+        it("should not return extra values", function()
+            local v403 = v_u_1.some({
+                v_u_1.resolve(1),
+                v_u_1.resolve(2),
+                v_u_1.resolve(3),
+                v_u_1.resolve(4)
+            }, 2)
+            expect(v403:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(#v403._values[1]).to.equal(2)
+            expect(v403._values[1][1]).to.equal(1)
+            expect(v403._values[1][2]).to.equal(2)
+        end)
+        it("should cancel promises if it is cancelled", function()
+            local v404 = v_u_1.new(function() end)
+            v404:andThen(function() end)
+            local v405 = { v_u_1.new(function() end), v_u_1.new(function() end), v404 }
+            v_u_1.some(v405, 3):cancel()
+            expect(v405[1]:getStatus()).to.equal(v_u_1.Status.Cancelled)
+            expect(v405[2]:getStatus()).to.equal(v_u_1.Status.Cancelled)
+            expect(v405[3]:getStatus()).to.equal(v_u_1.Status.Started)
+        end)
+        describe("Promise.any", function()
+            it("should return the value directly", function()
+                local v406 = v_u_1.any({ v_u_1.reject(), v_u_1.reject(), v_u_1.resolve(1) })
+                expect(v406:getStatus()).to.equal(v_u_1.Status.Resolved)
+                expect(v406._values[1]).to.equal(1)
+            end)
+            it("should error if all are rejected", function()
+                expect(v_u_1.any({ v_u_1.reject(), v_u_1.reject(), v_u_1.reject() }):getStatus()).to.equal(v_u_1.Status.Rejected)
+            end)
+        end)
+    end)
+    describe("Promise.allSettled", function()
+        it("should resolve with an array of PromiseStatuses", function()
+            local v_u_407 = nil
+            local v409 = v_u_1.allSettled({
+                v_u_1.resolve(),
+                v_u_1.reject(),
+                v_u_1.resolve(),
+                v_u_1.new(function(_, p408)
+                    v_u_407 = p408
+                end)
+            })
+            expect(v409:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_407()
+            expect(v409:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v409._values[1][1]).to.equal(v_u_1.Status.Resolved)
+            expect(v409._values[1][2]).to.equal(v_u_1.Status.Rejected)
+            expect(v409._values[1][3]).to.equal(v_u_1.Status.Resolved)
+            expect(v409._values[1][4]).to.equal(v_u_1.Status.Rejected)
+        end)
+        it("should cancel promises if it is cancelled", function()
+            local v410 = v_u_1.new(function() end)
+            v410:andThen(function() end)
+            local v411 = { v_u_1.new(function() end), v_u_1.new(function() end), v410 }
+            v_u_1.allSettled(v411):cancel()
+            expect(v411[1]:getStatus()).to.equal(v_u_1.Status.Cancelled)
+            expect(v411[2]:getStatus()).to.equal(v_u_1.Status.Cancelled)
+            expect(v411[3]:getStatus()).to.equal(v_u_1.Status.Started)
+        end)
+    end)
+    describe("Promise:await", function()
+        it("should return the correct values", function()
+            local v412, v413, v414, v415, v416 = v_u_1.resolve(5, 6, nil, 7):await()
+            expect(v412).to.equal(true)
+            expect(v413).to.equal(5)
+            expect(v414).to.equal(6)
+            expect(v415).to.equal(nil)
+            expect(v416).to.equal(7)
+        end)
+        it("should work if yielding is needed", function()
+            local v_u_417 = false
+            task.spawn(function()
+                local _, v418 = v_u_1.delay(1):await()
+                expect((type(v418))).to.equal("number")
+                v_u_417 = true
+            end)
+            v_u_6(2)
+            expect(v_u_417).to.equal(true)
+        end)
+    end)
+    describe("Promise:expect", function()
+        it("should throw the correct values", function()
+            local v419 = {}
+            local v_u_420 = v_u_1.reject(v419)
+            local v421, v422 = pcall(function()
+                v_u_420:expect()
+            end)
+            expect(v421).to.equal(false)
+            expect(v422).to.equal(v419)
+        end)
+    end)
+    describe("Promise:now", function()
+        it("should resolve if the Promise is resolved", function()
+            local v423, v424 = v_u_1.resolve("foo"):now():_unwrap()
+            expect(v423).to.equal(true)
+            expect(v424).to.equal("foo")
+        end)
+        it("should reject if the Promise is not resolved", function()
+            local v425, v426 = v_u_1.new(function() end):now():_unwrap()
+            expect(v425).to.equal(false)
+            expect(v_u_1.Error.isKind(v426, "NotResolvedInTime")).to.equal(true)
+        end)
+        it("should reject with a custom rejection value", function()
+            local v427, v428 = v_u_1.new(function() end):now("foo"):_unwrap()
+            expect(v427).to.equal(false)
+            expect(v428).to.equal("foo")
+        end)
+    end)
+    describe("Promise.each", function()
+        it("should iterate", function()
+            local v429, v430 = v_u_1.each({
+                "foo",
+                "bar",
+                "baz",
+                "qux"
+            }, function(...)
+                return { ... }
+            end):_unwrap()
+            expect(v429).to.equal(true)
+            expect(v430[1][1]).to.equal("foo")
+            expect(v430[1][2]).to.equal(1)
+            expect(v430[2][1]).to.equal("bar")
+            expect(v430[2][2]).to.equal(2)
+            expect(v430[3][1]).to.equal("baz")
+            expect(v430[3][2]).to.equal(3)
+            expect(v430[4][1]).to.equal("qux")
+            expect(v430[4][2]).to.equal(4)
+        end)
+        it("should iterate serially", function()
+            local v_u_431 = {}
+            local v_u_432 = {}
+            local v438 = v_u_1.each({ "foo", "bar", "baz" }, function(p_u_433, p434)
+                v_u_432[p434] = (v_u_432[p434] or 0) + 1
+                return v_u_1.new(function(p_u_435)
+                    local v436 = v_u_431
+                    local function v437()
+                        p_u_435(p_u_433:upper())
+                    end
+                    table.insert(v436, v437)
+                end)
+            end)
+            expect(v438:getStatus()).to.equal(v_u_1.Status.Started)
+            expect(#v_u_431).to.equal(1)
+            expect(v_u_432[1]).to.equal(1)
+            expect(v_u_432[2]).to.never.be.ok()
+            table.remove(v_u_431, 1)()
+            expect(v438:getStatus()).to.equal(v_u_1.Status.Started)
+            expect(#v_u_431).to.equal(1)
+            expect(v_u_432[1]).to.equal(1)
+            expect(v_u_432[2]).to.equal(1)
+            expect(v_u_432[3]).to.never.be.ok()
+            table.remove(v_u_431, 1)()
+            expect(v438:getStatus()).to.equal(v_u_1.Status.Started)
+            expect(v_u_432[1]).to.equal(1)
+            expect(v_u_432[2]).to.equal(1)
+            expect(v_u_432[3]).to.equal(1)
+            table.remove(v_u_431, 1)()
+            expect(v438:getStatus()).to.equal(v_u_1.Status.Resolved)
+            local v439 = expect
+            local v440 = v438._values[1]
+            v439((type(v440))).to.equal("table")
+            local v441 = expect
+            local v442 = v438._values[2]
+            v441((type(v442))).to.equal("nil")
+            local v443 = v438._values[1]
+            expect(v443[1]).to.equal("FOO")
+            expect(v443[2]).to.equal("BAR")
+            expect(v443[3]).to.equal("BAZ")
+        end)
+        it("should reject with the value if the predicate promise rejects", function()
+            local v444 = v_u_1.each({ 1, 2, 3 }, function()
+                return v_u_1.reject("foobar")
+            end)
+            expect(v444:getStatus()).to.equal(v_u_1.Status.Rejected)
+            expect(v444._values[1]).to.equal("foobar")
+        end)
+        it("should allow Promises to be in the list and wait when it gets to them", function()
+            local v_u_445 = nil
+            local v447 = { (v_u_1.new(function(p446)
+                    v_u_445 = p446
+                end)) }
+            local v449 = v_u_1.each(v447, function(p448)
+                return p448 * 2
+            end)
+            expect(v449:getStatus()).to.equal(v_u_1.Status.Started)
+            v_u_445(2)
+            expect(v449:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v449._values[1][1]).to.equal(4)
+        end)
+        it("should reject with the value if a Promise from the list rejects", function()
+            local v_u_450 = false
+            local v451 = v_u_1.each({ 1, 2, v_u_1.reject("foobar") }, function(_)
+                v_u_450 = true
+                return "never"
+            end)
+            expect(v451:getStatus()).to.equal(v_u_1.Status.Rejected)
+            expect(v451._values[1]).to.equal("foobar")
+            expect(v_u_450).to.equal(false)
+        end)
+        it("should reject immediately if there\'s a cancelled Promise in the list initially", function()
+            local v452 = v_u_1.new(function() end)
+            v452:cancel()
+            local v_u_453 = false
+            local v454 = v_u_1.each({ 1, 2, v452 }, function()
+                v_u_453 = true
+            end)
+            expect(v454:getStatus()).to.equal(v_u_1.Status.Rejected)
+            expect(v_u_453).to.equal(false)
+            expect(v454._values[1].kind).to.equal(v_u_1.Error.Kind.AlreadyCancelled)
+        end)
+        it("should stop iteration if Promise.each is cancelled", function()
+            local v_u_455 = {}
+            local v457 = v_u_1.each({ "foo", "bar", "baz" }, function(_, p456)
+                v_u_455[p456] = (v_u_455[p456] or 0) + 1
+                return v_u_1.new(function() end)
+            end)
+            expect(v457:getStatus()).to.equal(v_u_1.Status.Started)
+            expect(v_u_455[1]).to.equal(1)
+            expect(v_u_455[2]).to.never.be.ok()
+            v457:cancel()
+            expect(v457:getStatus()).to.equal(v_u_1.Status.Cancelled)
+            expect(v_u_455[1]).to.equal(1)
+            expect(v_u_455[2]).to.never.be.ok()
+        end)
+        it("should cancel the Promise returned from the predicate if Promise.each is cancelled", function()
+            local v_u_458 = nil
+            v_u_1.each({ "foo", "bar", "baz" }, function(_, _)
+                v_u_458 = v_u_1.new(function() end)
+                return v_u_458
+            end):cancel()
+            expect(v_u_458:getStatus()).to.equal(v_u_1.Status.Cancelled)
+        end)
+        it("should cancel Promises in the list if Promise.each is cancelled", function()
+            local v459 = v_u_1.new(function() end)
+            v_u_1.each({ v459 }, function() end):cancel()
+            expect(v459:getStatus()).to.equal(v_u_1.Status.Cancelled)
+        end)
+    end)
+    describe("Promise.retry", function()
+        it("should retry N times", function()
+            local v_u_460 = 0
+            local v462 = v_u_1.retry(function(p461)
+                expect(p461).to.equal("foo")
+                v_u_460 = v_u_460 + 1
+                if v_u_460 == 5 then
+                    return v_u_1.resolve("ok")
+                else
+                    return v_u_1.reject("fail")
+                end
+            end, 5, "foo")
+            expect(v462:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v462._values[1]).to.equal("ok")
+        end)
+        it("should reject if threshold is exceeded", function()
+            local v463 = v_u_1.retry(function()
+                return v_u_1.reject("fail")
+            end, 5)
+            expect(v463:getStatus()).to.equal(v_u_1.Status.Rejected)
+            expect(v463._values[1]).to.equal("fail")
+        end)
+    end)
+    describe("Promise.retryWithDelay", function()
+        it("should retry after a delay", function()
+            local v_u_464 = 0
+            local v466 = v_u_1.retryWithDelay(function(p465)
+                expect(p465).to.equal("foo")
+                v_u_464 = v_u_464 + 1
+                if v_u_464 == 3 then
+                    return v_u_1.resolve("ok")
+                else
+                    return v_u_1.reject("fail")
+                end
+            end, 3, 10, "foo")
+            expect(v_u_464).to.equal(1)
+            v_u_6(11)
+            expect(v_u_464).to.equal(2)
+            v_u_6(11)
+            expect(v_u_464).to.equal(3)
+            expect(v466:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v466._values[1]).to.equal("ok")
+        end)
+    end)
+    describe("Promise.fromEvent", function()
+        it("should convert a Promise into an event", function()
+            local v467 = Instance.new("BindableEvent")
+            local v468 = v_u_1.fromEvent(v467.Event)
+            expect(v468:getStatus()).to.equal(v_u_1.Status.Started)
+            v467:Fire("foo")
+            task.defer(coroutine.running())
+            coroutine.yield()
+            expect(v468:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v468._values[1]).to.equal("foo")
+        end)
+        it("should convert a Promise into an event with the predicate", function()
+            local v469 = Instance.new("BindableEvent")
+            local v471 = v_u_1.fromEvent(v469.Event, function(p470)
+                return p470 == "foo"
+            end)
+            expect(v471:getStatus()).to.equal(v_u_1.Status.Started)
+            v469:Fire("bar")
+            task.defer(coroutine.running())
+            coroutine.yield()
+            expect(v471:getStatus()).to.equal(v_u_1.Status.Started)
+            v469:Fire("foo")
+            task.defer(coroutine.running())
+            coroutine.yield()
+            expect(v471:getStatus()).to.equal(v_u_1.Status.Resolved)
+            expect(v471._values[1]).to.equal("foo")
+        end)
+    end)
+    describe("Promise.is", function()
+        it("should work with current version", function()
+            local v472 = v_u_1.resolve(1)
+            expect(v_u_1.is(v472)).to.equal(true)
+        end)
+        it("should work with any object with an andThen", function()
+            expect(v_u_1.is({
+                ["andThen"] = function()
+                    return 1
+                end
+            })).to.equal(true)
+        end)
+        it("should work with older promises", function()
+            local v473 = {
+                ["prototype"] = {}
+            }
+            v473.__index = v473.prototype
+            function v473.prototype.andThen(_) end
+            local v474 = setmetatable({}, v473)
+            expect(v_u_1.is(v474)).to.equal(true)
+        end)
+    end)
+end

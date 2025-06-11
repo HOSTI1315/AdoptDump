@@ -1,0 +1,30 @@
+--// ReplicatedStorage.SharedModules.ContentPacks.Beach2024.Animations (ModuleScript)
+
+return {
+    ["Beach2024NautilusBeg"] = 16382382541,
+    ["Beach2024NautilusDig"] = 16382384105,
+    ["Beach2024NautilusIdle"] = 16382385649,
+    ["Beach2024NautilusJoyful"] = 16382387191,
+    ["Beach2024NautilusJump"] = 16382388543,
+    ["Beach2024NautilusRun"] = 16382390256,
+    ["Beach2024NautilusSit"] = 16382392325,
+    ["Beach2024NautilusTrick1"] = 16382393737,
+    ["Beach2024NautilusTrick2"] = 16382395252,
+    ["Beach2024NautilusEat"] = 16382396636,
+    ["Beach2024NautilusSleep"] = 16382398404,
+    ["Beach2024NautilusBeingHeldSingle"] = 16382403267,
+    ["Beach2024NautilusBeingHeldDouble"] = 16382401515,
+    ["Beach2024MahiMahiBeg"] = 16440579550,
+    ["Beach2024MahiMahiDig"] = 16440581969,
+    ["Beach2024MahiMahiIdle"] = 16440583579,
+    ["Beach2024MahiMahiJoyful"] = 16440586290,
+    ["Beach2024MahiMahiJump"] = 16440588174,
+    ["Beach2024MahiMahiRun"] = 16440590398,
+    ["Beach2024MahiMahiSit"] = 16647896252,
+    ["Beach2024MahiMahiTrick1"] = 16440596302,
+    ["Beach2024MahiMahiTrick2"] = 16440598921,
+    ["Beach2024MahiMahiEat"] = 16648775538,
+    ["Beach2024MahiMahiSleep"] = 16647898341,
+    ["Beach2024MahiMahiBeingHeldSingle"] = 16440606500,
+    ["Beach2024MahiMahiBeingHeldDouble"] = 16440608231
+}

@@ -1,0 +1,30 @@
+--// ReplicatedStorage.SharedModules.ContentPacks.StPatricks2025.Animations (ModuleScript)
+
+return {
+    ["StPatricks2025CloverCowBeg"] = 123015879057877,
+    ["StPatricks2025CloverCowDig"] = 120457975477646,
+    ["StPatricks2025CloverCowIdle"] = 91464277780306,
+    ["StPatricks2025CloverCowJoyful"] = 109433508597787,
+    ["StPatricks2025CloverCowJump"] = 102749380398481,
+    ["StPatricks2025CloverCowRun"] = 96376310224629,
+    ["StPatricks2025CloverCowSit"] = 75297273694938,
+    ["StPatricks2025CloverCowTrick1"] = 96189206292007,
+    ["StPatricks2025CloverCowTrick2"] = 73460726954017,
+    ["StPatricks2025CloverCowBeingHeldDouble"] = 135605232171502,
+    ["StPatricks2025CloverCowBeingHeldSingle"] = 115624332163298,
+    ["StPatricks2025CloverCowEat"] = 96535479602502,
+    ["StPatricks2025CloverCowSleep"] = 94439131498620,
+    ["StPatricks2025GaelicFaeBeg"] = 121057267393208,
+    ["StPatricks2025GaelicFaeDig"] = 90442235532773,
+    ["StPatricks2025GaelicFaeIdle"] = 78910526430244,
+    ["StPatricks2025GaelicFaeJoyful"] = 115644155899689,
+    ["StPatricks2025GaelicFaeJump"] = 89681332629319,
+    ["StPatricks2025GaelicFaeRun"] = 102176373192313,
+    ["StPatricks2025GaelicFaeSit"] = 105996714646327,
+    ["StPatricks2025GaelicFaeTrick1"] = 137338783472785,
+    ["StPatricks2025GaelicFaeTrick2"] = 113019016816012,
+    ["StPatricks2025GaelicFaeBeingHeldDouble"] = 136375933201080,
+    ["StPatricks2025GaelicFaeBeingHeldSingle"] = 136430106384424,
+    ["StPatricks2025GaelicFaeEat"] = 72837905049835,
+    ["StPatricks2025GaelicFaeSleep"] = 105165972869725
+}

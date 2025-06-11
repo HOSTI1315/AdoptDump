@@ -1,0 +1,30 @@
+--// ReplicatedStorage.SharedModules.ContentPacks.ButterflySanctuary2025.Animations (ModuleScript)
+
+return {
+    ["Butterfly2025ButterflyBeg"] = 106934617423464,
+    ["Butterfly2025ButterflyDig"] = 138490166501762,
+    ["Butterfly2025ButterflyIdle"] = 83289797681246,
+    ["Butterfly2025ButterflyJoyful"] = 89801710235468,
+    ["Butterfly2025ButterflyJump"] = 130175242272411,
+    ["Butterfly2025ButterflyRun"] = 131026867484621,
+    ["Butterfly2025ButterflySit"] = 108085685241558,
+    ["Butterfly2025ButterflyTrick1"] = 71638323563738,
+    ["Butterfly2025ButterflyTrick2"] = 95198074050990,
+    ["Butterfly2025ButterflyEat"] = 114407389485333,
+    ["Butterfly2025ButterflySleep"] = 88165868475578,
+    ["Butterfly2025ButterflyBeingHeldSingle"] = 129759150390791,
+    ["Butterfly2025ButterflyBeingHeldDouble"] = 97695637750357,
+    ["Butterfly2025PrismaticButterflyBeg"] = 126878021972859,
+    ["Butterfly2025PrismaticButterflyDig"] = 79355615611365,
+    ["Butterfly2025PrismaticButterflyIdle"] = 111187567582436,
+    ["Butterfly2025PrismaticButterflyJoyful"] = 101789070298956,
+    ["Butterfly2025PrismaticButterflyJump"] = 123705091501270,
+    ["Butterfly2025PrismaticButterflyRun"] = 133920446246305,
+    ["Butterfly2025PrismaticButterflySit"] = 139012071820900,
+    ["Butterfly2025PrismaticButterflyTrick1"] = 76580170667748,
+    ["Butterfly2025PrismaticButterflyTrick2"] = 127253314644049,
+    ["Butterfly2025PrismaticButterflyEat"] = 93754040390168,
+    ["Butterfly2025PrismaticButterflySleep"] = 78738150424710,
+    ["Butterfly2025PrismaticButterflyBeingHeldSingle"] = 135281442719077,
+    ["Butterfly2025PrismaticButterflyBeingHeldDouble"] = 72064172685363
+}

@@ -1,0 +1,78 @@
+--// ReplicatedStorage.SharedPackages._Index.roblox_roact@1.4.4.roact.ElementUtils.spec (ModuleScript)
+
+return function()
+    local v_u_1 = require(script.Parent.ElementUtils)
+    local v_u_2 = require(script.Parent.createElement)
+    local v_u_3 = require(script.Parent.createFragment)
+    local v_u_4 = require(script.Parent.Type)
+    describe("iterateElements", function()
+        it("should iterate once for a single child", function()
+            local v5 = v_u_2("TextLabel")
+            local v6 = v_u_1.iterateElements(v5)
+            local v7, v8 = v6()
+            expect(v7).to.equal(v_u_1.UseParentKey)
+            expect(v8).to.equal(v5)
+            local v9 = v6()
+            expect(v9).to.equal(nil)
+        end)
+        it("should iterate over tables", function()
+            local v10 = {
+                ["a"] = v_u_2("TextLabel"),
+                ["b"] = v_u_2("TextLabel")
+            }
+            local v11 = {}
+            local v12 = 0
+            for v13, v14 in v_u_1.iterateElements(v10) do
+                expect((typeof(v13))).to.equal("string")
+                expect(v_u_4.of(v14)).to.equal(v_u_4.Element)
+                v11[v14] = v13
+                v12 = v12 + 1
+            end
+            expect(v12).to.equal(2)
+            expect(v11[v10.a]).to.equal("a")
+            expect(v11[v10.b]).to.equal("b")
+        end)
+        it("should return a zero-element iterator for booleans", function()
+            local v15 = v_u_1.iterateElements(false)
+            expect(v15()).to.equal(nil)
+        end)
+        it("should return a zero-element iterator for nil", function()
+            local v16 = v_u_1.iterateElements(nil)
+            expect(v16()).to.equal(nil)
+        end)
+        it("should throw if given an illegal value", function()
+            expect(function()
+                v_u_1.iterateElements(1)
+            end).to.throw()
+        end)
+    end)
+    describe("getElementByKey", function()
+        it("should return nil for booleans", function()
+            expect(v_u_1.getElementByKey(true, "test")).to.equal(nil)
+        end)
+        it("should return nil for nil", function()
+            expect(v_u_1.getElementByKey(nil, "test")).to.equal(nil)
+        end)
+        describe("single elements", function()
+            local v_u_17 = v_u_2("TextLabel")
+            it("should return the element if the key is UseParentKey", function()
+                expect(v_u_1.getElementByKey(v_u_17, v_u_1.UseParentKey)).to.equal(v_u_17)
+            end)
+            it("should return nil if the key is not UseParentKey", function()
+                expect(v_u_1.getElementByKey(v_u_17, "test")).to.equal(nil)
+            end)
+        end)
+        it("should return the corresponding element from a table", function()
+            local v18 = {
+                ["a"] = v_u_2("TextLabel"),
+                ["b"] = v_u_2("TextLabel")
+            }
+            expect(v_u_1.getElementByKey(v18, "a")).to.equal(v18.a)
+            expect(v_u_1.getElementByKey(v18, "b")).to.equal(v18.b)
+        end)
+        it("should return nil if the key does not exist", function()
+            local v19 = v_u_3({})
+            expect(v_u_1.getElementByKey(v19, "a")).to.equal(nil)
+        end)
+    end)
+end

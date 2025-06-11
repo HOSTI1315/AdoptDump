@@ -1,0 +1,30 @@
+--// ReplicatedStorage.SharedModules.ContentPacks.UGCRefresh2024.Animations (ModuleScript)
+
+return {
+    ["UGCRefresh2024JellyfishBeg"] = 15883860119,
+    ["UGCRefresh2024JellyfishDig"] = 15883846964,
+    ["UGCRefresh2024JellyfishIdle"] = 15883848128,
+    ["UGCRefresh2024JellyfishJoyful"] = 15883849716,
+    ["UGCRefresh2024JellyfishJump"] = 15883858011,
+    ["UGCRefresh2024JellyfishRun"] = 15883851545,
+    ["UGCRefresh2024JellyfishSit"] = 15883853621,
+    ["UGCRefresh2024JellyfishTrick1"] = 15883844785,
+    ["UGCRefresh2024JellyfishTrick2"] = 15883855756,
+    ["UGCRefresh2024JellyfishBeingHeldDouble"] = 15883865828,
+    ["UGCRefresh2024JellyfishBeingHeldSingle"] = 15883868000,
+    ["UGCRefresh2024JellyfishEat"] = 15883862104,
+    ["UGCRefresh2024JellyfishSleep"] = 15883864188,
+    ["UGCRefresh2024HoneyBadgerBeg"] = 134857812582606,
+    ["UGCRefresh2024HoneyBadgerDig"] = 98850249570246,
+    ["UGCRefresh2024HoneyBadgerIdle"] = 129201180418196,
+    ["UGCRefresh2024HoneyBadgerJoyful"] = 133839912276262,
+    ["UGCRefresh2024HoneyBadgerJump"] = 108001922611502,
+    ["UGCRefresh2024HoneyBadgerRun"] = 81075000229285,
+    ["UGCRefresh2024HoneyBadgerSit"] = 87935946097182,
+    ["UGCRefresh2024HoneyBadgerTrick1"] = 106081341451215,
+    ["UGCRefresh2024HoneyBadgerTrick2"] = 87346702041952,
+    ["UGCRefresh2024HoneyBadgerBeingHeldDouble"] = 138232839926627,
+    ["UGCRefresh2024HoneyBadgerBeingHeldSingle"] = 109432467127119,
+    ["UGCRefresh2024HoneyBadgerEat"] = 128890441979359,
+    ["UGCRefresh2024HoneyBadgerSleep"] = 113639865637734
+}
